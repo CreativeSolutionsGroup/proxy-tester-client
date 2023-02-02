@@ -1,0 +1,94 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model checkin {
+  id        String @id
+  studentId String
+  eventId   String
+  event     event  @relation(fields: [eventId], references: [id])
+}
+
+model client {
+  id            String    @id
+  macAddress    String
+  alias         String
+  eventId       String
+  lastHeartbeat DateTime?
+  status        Boolean
+  event         event     @relation(fields: [eventId], references: [id])
+}
+
+model event {
+  id          String     @id
+  alias       String
+  description String
+  points      Int        @default(0)
+  checkin     checkin[]
+  client      client[]
+  giveaway    giveaway[]
+  reward      reward[]
+}
+
+model giveaway {
+  id        String   @id
+  eventId   String
+  startTime DateTime
+  endTime   DateTime
+  message   String
+  password  String
+  event     event    @relation(fields: [eventId], references: [id])
+}
+
+model reward {
+  id           String        @id
+  name         String
+  description  String
+  instructions String
+  defaultUses  Int
+  imageUrl     String
+  user_reward  user_reward[]
+  event        event[]
+}
+
+model reward_tier {
+  id          String   @id
+  name        String
+  description String
+  color       String
+  minPoints   Int
+  rewards     String[]
+  user        user[]
+}
+
+model role {
+  id   String @id
+  name String
+  user user[]
+}
+
+model user {
+  id           String        @id
+  studentId    String
+  email        String
+  name         String?
+  rewardPoint  Int
+  rewardTierId String?
+  reward_tier  reward_tier?  @relation(fields: [rewardTierId], references: [id])
+  user_reward  user_reward[]
+  role         role[]
+}
+
+model user_reward {
+  id            String @id
+  userId        String
+  rewardId      String
+  remainingUses Int    @default(1)
+  reward        reward @relation(fields: [rewardId], references: [id])
+  user          user   @relation(fields: [userId], references: [id])
+}
